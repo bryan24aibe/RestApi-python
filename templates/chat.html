@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat REST API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .chat-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            background: #fff;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message strong {
+            color: #333;
+        }
+        .message span {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat REST API</h1>
+    <div class="chat-box" id="chat-box"></div>
+    <form id="chat-form">
+        <input type="text" id="username" placeholder="Tu nombre" required>
+        <input type="text" id="message" placeholder="Escribe un mensaje" required>
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const chatForm = document.getElementById('chat-form');
+        const usernameInput = document.getElementById('username');
+        const messageInput = document.getElementById('message');
+
+        // Cargar mensajes existentes
+        async function loadMessages() {
+            const response = await fetch('/messages');
+            const messages = await response.json();
+            chatBox.innerHTML = messages.map(msg => `
+                <div class="message">
+                    <strong>${msg.username}</strong>: ${msg.message}
+                    <span>(${msg.timestamp})</span>
+                </div>
+            `).join('');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Enviar un nuevo mensaje
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (username && message) {
+                await fetch('/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, message })
+                });
+                messageInput.value = '';
+                loadMessages();
+            }
+        });
+
+        // Actualizar mensajes cada 3 segundos
+        setInterval(loadMessages, 3000);
+        loadMessages();
+    </script>
+</body>
+</html>
